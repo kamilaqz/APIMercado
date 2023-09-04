@@ -1,0 +1,200 @@
+const PromotionModel = require('../models/promotionModel');
+const PurchaseModel = require('../models/purchaseModel');
+const ProductModel = require('../models/productModel');
+const ClientModel = require('../models/clientModel');
+
+module.exports= {
+  createPromotion: async (req, res) => {
+    try {
+        const result = await PromotionModel.create(req.body)
+        res.status(201).json({message: `Promoção criada com sucesso!`})
+    } catch (err) {
+        res.status(500).json({message: `Não foi possível criar a promoção.`})
+    }
+  },
+  getPromotions: (req, res) => {
+      PromotionModel.find({}).select(["-__v", "-_id"]).then((result) => {
+          res.status(200).json(result)
+      }).catch(() => {
+          res.status(500).json({message: "Não foi possível listar as promoções"})
+      })
+  },
+  deletePromotionById: async (req, res) => {
+      try {
+          const result = await PromotionModel.deleteOne({id: req.params.id})
+          res.status(200).send({message: "Promoção removida com sucesso!"})
+      } catch (err) {
+          res.status(500).json({message: "Não foi possível remover."})
+      }
+  },
+  updatePromotion: async (req, res) => {
+      try {
+          const result = await PromotionModel.updateOne({id: req.body.id}, req.body)
+          res.status(200).send({message: 'Promoção atualizada com sucesso!'})
+      } catch (err) {
+          res.status(500).json({message: 'Não foi possível atualizar.'})
+      }
+  },
+  promotionsForClient: async (req, res) => {
+    try {
+      const { nome } = req.params;
+      const comprasDoCliente = await PurchaseModel.find({ cliente: nome });
+  
+      if (comprasDoCliente.length === 0) {
+        return res.status(404).json([]);
+      }
+  
+      const produtosFavoritos = [...new Set(comprasDoCliente.map(compra => compra.produto))];
+      
+      const promoções = await PromotionModel.find({ produto: { $in: produtosFavoritos } });
+  
+      res.status(200).json(promoções);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Erro ao obter promoções para o cliente.' });
+    }
+  },
+
+  /*
+  async promoçãoParaCliente(nomeCliente) {
+    try {
+      const comprasDoCliente = await PurchaseModel.find({ cliente: nomeCliente });
+  
+      if (comprasDoCliente.length === 0) {
+        return [];
+      }
+  
+      const produtosFavoritos = [...new Set(comprasDoCliente.map(compra => compra.produto))];
+      
+      const promoções = await PromotionModel.find({ produto: { $in: produtosFavoritos } });
+  
+      return promoções;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
+
+
+    /*try {
+      const compraMaisFrequente = await PurchaseModel.aggregate([
+        { $match: { cliente: nomeCliente } },
+        { $group: { _id: '$produto', quantidade: { $sum: 1 } } },
+        { $sort: { quantidade: -1 } },
+        { $limit: 1 },
+      ]);
+
+    if (compraMaisFrequente.length === 0) {
+      return null;
+    }
+
+    const produtoMaisComprado = compraMaisFrequente[0]._id;
+
+    const promoção = await PromotionModel.findOne({ produto: produtoMaisComprado });
+
+    return promoção;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}*/
+
+
+  /*
+  async promoçõesParaCliente(cliente) {
+    try {
+      const comprasDoCliente = await PurchaseModel.findOne({ cliente: cliente });
+  
+      if (comprasDoCliente.length === 0) {
+        return [];
+      }
+  
+      const contadorProdutos = {};
+      comprasDoCliente.forEach(compra => {
+        if (contadorProdutos[compra.produto]) {
+          contadorProdutos[compra.produto]++;
+        } else {
+          contadorProdutos[compra.produto] = 1;
+        }
+      });
+  
+      let produtoMaisComprado = null;
+      let quantidadeMaisComprada = 0;
+  
+      for (const produto in contadorProdutos) {
+        if (contadorProdutos[produto] > quantidadeMaisComprada) {
+          quantidadeMaisComprada = contadorProdutos[produto];
+          produtoMaisComprado = produto;
+        }
+      }
+  
+      if (!produtoMaisComprado) {
+        return [];
+      }
+  
+      const promoção = await PromotionModel.findOne({ produto: produtoMaisComprado });
+  
+      if (!promoção) {
+        return [];
+      }
+  
+      return promoção;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+  /*
+  async produtoFavoritoDoCliente(cliente) {
+    try {
+        const comprasDoCliente = await PurchaseModel.find({ cliente: cliente });
+    
+        if (comprasDoCliente.length === 0) {
+          return null;
+        }
+    
+        const contadorProdutos = {};
+    
+        comprasDoCliente.forEach(compra => {
+          if (contadorProdutos[compra.produto]) {
+            contadorProdutos[compra.produto]++;
+          } else {
+            contadorProdutos[compra.produto] = 1;
+          }
+        });
+    
+        let produtoMaisComprado = null;
+        let quantidadeMaisComprada = 0;
+    
+        for (const produtos in contadorProdutos) {
+          if (contadorProdutos[produtos] > quantidadeMaisComprada) {
+            quantidadeMaisComprada = contadorProdutos[produtos];
+            produtoMaisComprado = produtos;
+          }
+        }
+    
+        return produtoMaisComprado;
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+  },
+  async promoçõesParaCliente(cliente) {
+    try {
+      const produtosFavoritos = await produtoFavoritoDoCliente(cliente);
+
+      if (produtosFavoritos.length === 0) {
+        return [];
+      }
+
+      const promoções = await PromotionModel.find({ produto: { $in: produtosFavoritos } })
+
+      return promoções;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }*/
+}
+  
