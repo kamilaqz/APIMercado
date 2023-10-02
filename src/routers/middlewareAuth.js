@@ -1,30 +1,31 @@
 const jwtService = require('jsonwebtoken')
+const dotenv = require('dotenv').config()
+
 module.exports = async (req, res, next) => {
 
     const routeClient = req.path
-    const nonSecurityRoutesClients = ['/createClient', '/login', '/about']
+    const nonSecurityRoutesClients = ['/client/create', '/client/login']
     if(nonSecurityRoutesClients.includes(routeClient)) {
         return next()
     }
 
     const routeEmployee = req.path
-    const nonSecurityRoutesEmployee = ['/createEmployee', '/login', '/about']
+    const nonSecurityRoutesEmployee = ['/employee/create', '/employee/login']
     if(nonSecurityRoutesEmployee.includes(routeEmployee)) {
         return next()
     }
 
     const token = req.headers.authorization
-    if (!token) {
-        res.status(401).json({message: "Usuario não autorizado"})
-        return next()
+    if (!token || !token.startsWith('Bearer ')) {
+        return res.status(401).json({message: "Usuário não autorizado"})
     }
-    //token = token.split(' ')[1] 
+
+    const tokenValue = token.split(' ')[1]
     const secret = process.env.SECRET
     try {
-        await jwtService.verify(token, secret)
+        await jwtService.verify(tokenValue, secret)
         return next()
     }catch (err) {
-        res.status(401).json({message: "Usuario não autorizado"})
-        return
+        return res.status(401).json({message: "Não foi possível autorizar."})
     }
 }

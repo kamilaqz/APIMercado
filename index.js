@@ -3,6 +3,7 @@
 const express = require('express')
 const app = express()
 const jwtService = require('jsonwebtoken');
+const dotenv = require('dotenv').config()
 
 const mongoose = require('mongoose')
 mongoose.connect('mongodb+srv://admin:admin@supermercado-cluster.7x01bc3.mongodb.net/?retryWrites=true&w=majority')
@@ -23,6 +24,7 @@ app.use(clientRouter)
 app.use(purchaseRouter)
 app.use(promotionRouter)
 app.use(employeeRouter)
+
 
 app.listen(port, () => {
     console.log(`O servidor está executando na porta ${port}`)

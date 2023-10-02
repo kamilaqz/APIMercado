@@ -7,6 +7,7 @@ module.exports= {
             const result = await ClientModel.create(req.body)
             res.status(201).json({message: `Cliente cadastrado com sucesso!`})
         } catch (err) {
+            console.log(err)
             res.status(500).json({message: `Não foi possível cadastrar cliente.`})
         }
     },
@@ -49,20 +50,21 @@ module.exports= {
             res.status(500).json({message: "Não foi possível encontrar o cliente."})
         } 
     },
-
     loginClient: async (req, res) => {
-        const result = await ClientModel.findOne({nome: req.body.nome, cpf: req.body.cpf})
-        if(!result) {
-            res.status(401).json({message: "Usuario não autorizado"})
-            return next()
-        } 
-        const secret = process.env.SECRET
-        jwtService.sign(req.body, secret, (err, token) => {
-            if (err) {
-                res.status(401).json({message: "Usuario não autorizado"})
+            const result = await ClientModel.findOne({ email: req.body.email, password: req.body.password })
+    
+            if (!result) {
+                res.status(401).json({ message: "Usuário não autorizado" })
+            } else {
+                const secret = process.env.SECRET
+                jwtService.sign(req.body, secret, {expiresIn: 86400} ,(err, token) => {
+                    if (err) {
+                        res.status(401).json({ message: "Usuário não autorizado" })
+                    } else {
+                        res.set("Access-Token", token);
+                        res.end()
+                    }
+                })
             }
-            res.set("Access-Token", token)
-            res.end()
-        })
     }
 }

@@ -49,9 +49,8 @@ module.exports= {
             res.status(500).json({message: "Não foi possível encontrar o funcionário."})
         } 
     },
-
     loginEmployee: async (req, res) => {
-        const result = await EmployeeModel.findOne({nome: req.body.nome, cpf: req.body.cpf})
+        const result = await EmployeeModel.findOne({email: req.body.email, password: req.body.password})
         if(!result) {
             res.status(401).json({message: "Usuario não autorizado"})
             return next()

@@ -5,18 +5,18 @@ const ProductModel = require('../models/productModel')
 module.exports= {
     realizarCompra: async (req, res) => {
         try {
-            const { clientName, productName } = req.body;
+            const { clientId, productId } = req.body;
 
-            const cliente = await ClientModel.findOne({ nome: clientName });
-            const produto = await ProductModel.findOne({ nome: productName });
+            const cliente = await ClientModel.findOne({ id: clientId });
+            const produto = await ProductModel.findOne({ id: productId });
 
             if (!cliente || !produto) {
               return res.status(404).json({ message: 'Cliente ou produto não encontrado.' });
             }
 
             const purchase = new PurchaseModel({
-              cliente: cliente.nome,
-              produto: produto.nome,
+              cliente: cliente._id,
+              produto: produto._id,
             });
         
             await purchase.save();
